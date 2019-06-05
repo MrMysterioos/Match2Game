@@ -154,6 +154,8 @@ xcopy "$(ProjectDir)..\Resources" "$(OutDir)\Resources\" /D /E /I /F /Y
     <ClCompile Include="..\Classes\GameScene.cpp" />
     <ClCompile Include="..\Classes\GoalLabel.cpp" />
     <ClCompile Include="..\Classes\HelloWorldScene.cpp" />
+    <ClCompile Include="..\Classes\LevelPreview.cpp" />
+    <ClCompile Include="..\Classes\MapScene.cpp" />
     <ClCompile Include="..\Classes\MessageListener.cpp" />
     <ClCompile Include="..\Classes\MessageSender.cpp" />
     <ClCompile Include="..\Classes\MovesLeftLabel.cpp" />
@@ -167,6 +169,9 @@ xcopy "$(ProjectDir)..\Resources" "$(OutDir)\Resources\" /D /E /I /F /Y
     <ClInclude Include="..\Classes\HelloWorldScene.h" />
     <ClInclude Include="..\Classes\Items.h" />
     <ClInclude Include="..\Classes\ItemSpriteFactory.h" />
+    <ClInclude Include="..\Classes\LevelData.h" />
+    <ClInclude Include="..\Classes\LevelPreview.h" />
+    <ClInclude Include="..\Classes\MapScene.h" />
     <ClInclude Include="..\Classes\MessageListener.h" />
     <ClInclude Include="..\Classes\MessageSender.h" />
     <ClInclude Include="..\Classes\MovesLeftLabel.h" />
