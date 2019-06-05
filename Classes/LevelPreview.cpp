@@ -14,11 +14,11 @@ bool LevelPreview::init(LevelData data)
 void LevelPreview::_SetLevelData(LevelData data)
 {
 	this->removeAllChildren();
-
-	_button = MenuItemImage::create("textures/ui_assets/button_9slice.png", "textures/ui_assets/button_9slice01.png", [](Ref* pSender) {
+	
+	_button = MenuItemImage::create("textures/ui_assets/button_9slice.png", "textures/ui_assets/button_9slice01.png", [=](Ref* pSender) {
 		log("click");
-		GameScene* gameScene = GameScene::create();
-		Director::getInstance()->pushScene(gameScene);
+		GameScene* gameScene = GameScene::create(data.source);
+		Director::getInstance()->replaceScene(gameScene);
 	});
 	_button->setAnchorPoint(Vec2(0.5f, 0.5f));
 	_button->setZOrder(0);

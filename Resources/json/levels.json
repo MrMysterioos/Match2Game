@@ -1,37 +1,37 @@
 [
     {
     	"num" : 1,
-    	"src" : "lvl1",
+    	"src" : "json/lvl1.json",
     	"fin" : true
     },
     {
     	"num" : 2,
-    	"src" : "lvl2",
+    	"src" : "json/lvl2.json",
     	"fin" : false
     },
     {
     	"num" : 3,
-    	"src" : "lvl3",
+    	"src" : "json/lvl3.json",
     	"fin" : true
     },
     {
     	"num" : 4,
-    	"src" : "lvl4",
+    	"src" : "json/lvl4.json",
     	"fin" : false
     },
     {
     	"num" : 5,
-    	"src" : "lvl5",
+    	"src" : "json/lvl5.json",
     	"fin" : false
     },
     {
     	"num" : 6,
-    	"src" : "lvl6",
+    	"src" : "json/lvl6.json",
     	"fin" : false
     },
     {
     	"num" : 7,
-    	"src" : "lvl7",
+    	"src" : "json/lvl7.json",
     	"fin" : false
     }
 ]

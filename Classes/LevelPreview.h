@@ -29,6 +29,7 @@ public:
 	}
 
 private:
+
 	MenuItem * _button;
 	Sprite * _mainSprite;
 	Label * _label;

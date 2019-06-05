@@ -1,6 +1,54 @@
 #include "GameField.h"
 #include "ItemSpriteFactory.h"
 
+void GameField::SetMap(int width, int height, std::vector<std::vector<int>> matrix)
+{
+	_height = height;
+	_width = width;
+
+	_offset = Vec2(-(width * _spacing) / 2, -(height * _spacing) / 2);
+
+	_matrix = std::vector<std::vector<Item>>(width, std::vector<Item>(height, Item::Hole));
+
+	for (int ix = 0; ix < width; ix++) {
+		for (int iy = 0; iy < height; iy++) {
+			if (matrix[ix][iy]) {
+				_matrix[ix][iy] = Item::Wall;
+			}
+			else {
+				int n = random() % 7;
+				if (n == 0) {
+					_matrix[ix][iy] = Item::Bread;
+				}
+				else if (n == 1) {
+					_matrix[ix][iy] = Item::Cocos;
+				}
+				else if (n == 2) {
+					_matrix[ix][iy] = Item::Milk;
+				}
+				else if (n == 3) {
+					_matrix[ix][iy] = Item::Orange;
+				}
+				else if (n == 4) {
+					_matrix[ix][iy] = Item::Tomato;
+				}
+				else if (n == 5) {
+					_matrix[ix][iy] = Item::Broccoli;
+				}
+				else if (n == 6) {
+					_matrix[ix][iy] = Item::Cristal;
+				}
+			}
+		}
+	}
+
+	_isLoaded = true;
+
+	_CreateGrid();
+
+	_CreateItems();
+}
+
 void GameField::EnableInput()
 {
 	_eventDispatcher->setEnabled(true);
@@ -15,12 +63,6 @@ bool GameField::init() {
 	if (!Node::init()) {
 		return false;
 	}
-	
-	_createRandomData(5, 5);
-
-	_CreateGrid();
-
-	_CreateItems();
 
 	EventListenerMouse* _mouseListener = EventListenerMouse::create();
 	_mouseListener->onMouseDown = [&](Event* event) {
@@ -30,7 +72,9 @@ bool GameField::init() {
 		log("mouse_down (%i : %i)", (int)co.x, (int)co.y);
 
 		if (mouseEvent->getMouseButton() == EventMouse::MouseButton::BUTTON_LEFT) {
-			_pos1 = co;
+			if (co.x > 0 && co.x < _width && co.y > 0 && co.y < _height) {
+				_pos1 = co;
+			}
 		}
 
 	};
@@ -40,9 +84,12 @@ bool GameField::init() {
 		log("mouse_up (%i : %i)", (int)co.x, (int)co.y);
 
 		if (mouseEvent->getMouseButton() == EventMouse::MouseButton::BUTTON_LEFT) {
-			_pos2 = co;
 
-			if (_gameState == GameState::Turn) {
+			if (co.x > 0 && co.x < _width && co.y > 0 && co.y < _height) {
+				_pos2 = co;
+			}
+
+			if (_gameState == GameState::Turn && _pos1 != Vec2(-1.f, -1.f) && _pos2 != Vec2(-1.f, -1.f)) {
 				_Swap(_pos1, _pos2);
 				_gameState = GameState::Swaping;
 				_timeBeforeUpdate = 1.f / _gameSpeed;
@@ -336,7 +383,7 @@ void GameField::_updateState()
 	}
 }
 
-void GameField::_createRandomData(int width, int height)
+void GameField::CreateRandomMap(int width, int height)
 {
 	_height = height;
 	_width = width;
@@ -376,4 +423,8 @@ void GameField::_createRandomData(int width, int height)
 	}
 
 	_isLoaded = true;
+
+	_CreateGrid();
+
+	_CreateItems();
 }

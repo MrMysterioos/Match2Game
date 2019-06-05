@@ -11,6 +11,9 @@ public:
 
 	enum GameState { Turn, Match, Waterfall, Swaping };
 
+	void SetMap(int width, int height, std::vector<std::vector<int>> matrix);
+	void CreateRandomMap(int width, int height);
+
 	void EnableInput();
 	void DisableInput();
 
@@ -61,10 +64,7 @@ private:
 
 	// control
 
-	Vec2 _pos1;
-	Vec2 _pos2;
+	Vec2 _pos1 = Vec2(-1.f, -1.f);
+	Vec2 _pos2 = Vec2(-1.f, -1.f);
 
-	// temp
-
-	void _createRandomData(int width, int height);
 };

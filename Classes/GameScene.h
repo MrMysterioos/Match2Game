@@ -15,13 +15,28 @@ public:
 
 	virtual void AcceptMessage(std::string message, std::string data);
 
-	virtual bool init();
+	virtual bool init(std::string src);
 
-	CREATE_FUNC(GameScene);
+	static GameScene* create(std::string src)
+	{
+		GameScene *pRet = new(std::nothrow) GameScene();
+		if (pRet && pRet->init(src))
+		{
+			pRet->autorelease();
+			return pRet;
+		}
+		else
+		{
+			delete pRet;
+			pRet = nullptr;
+			return nullptr;
+		}
+	}
 
 private:
 
 	void _setState(GameSceneState newState);
+	void _loadLvl(std::string src);
 
 	GameSceneState _state;
 
