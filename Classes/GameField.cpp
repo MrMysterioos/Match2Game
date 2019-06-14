@@ -51,21 +51,8 @@ void GameField::SetMap(int width, int height, std::vector<std::vector<int>> matr
 
 void GameField::EnableInput()
 {
-	_eventDispatcher->setEnabled(true);
-}
-
-void GameField::DisableInput()
-{
-	_eventDispatcher->setEnabled(false);
-}
-
-bool GameField::init() {
-	if (!Node::init()) {
-		return false;
-	}
-
-	EventListenerMouse* _mouseListener = EventListenerMouse::create();
-	_mouseListener->onMouseDown = [&](Event* event) {
+	_mouseDownListener = EventListenerMouse::create();
+	_mouseDownListener->onMouseDown = [&](Event* event) {
 		EventMouse* mouseEvent = (EventMouse*)event;
 
 		Vec2 co = _GetPointedCellCoordinates(mouseEvent->getLocation());
@@ -78,7 +65,9 @@ bool GameField::init() {
 		}
 
 	};
-	_mouseListener->onMouseUp = [&](Event* event) {
+
+	_mouseUpListener = EventListenerMouse::create();
+	_mouseUpListener->onMouseUp = [&](Event* event) {
 		EventMouse* mouseEvent = (EventMouse*)event;
 		Vec2 co = _GetPointedCellCoordinates(mouseEvent->getLocation());
 		log("mouse_up (%i : %i)", (int)co.x, (int)co.y);
@@ -101,7 +90,22 @@ bool GameField::init() {
 
 	};
 
-	_eventDispatcher->addEventListenerWithFixedPriority(_mouseListener, 1);
+	_eventDispatcher->addEventListenerWithFixedPriority(_mouseDownListener, 1);
+	_eventDispatcher->addEventListenerWithFixedPriority(_mouseUpListener, 1);
+}
+
+void GameField::DisableInput()
+{
+	_eventDispatcher->removeEventListener(_mouseDownListener);
+	_eventDispatcher->removeEventListener(_mouseUpListener);
+}
+
+bool GameField::init() {
+	if (!Node::init()) {
+		return false;
+	}
+
+	EnableInput();
 
 	scheduleUpdate();
 
@@ -381,6 +385,11 @@ void GameField::_updateState()
 			_gameState = GameState::Turn;
 		}
 	}
+}
+
+GameField::~GameField()
+{
+	DisableInput();
 }
 
 void GameField::CreateRandomMap(int width, int height)

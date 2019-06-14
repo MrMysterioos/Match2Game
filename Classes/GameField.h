@@ -43,6 +43,11 @@ private:
 
 	void _updateState();
 
+	~GameField();
+
+	EventListenerMouse* _mouseDownListener;
+	EventListenerMouse* _mouseUpListener;
+
 	GameState _gameState = GameState::Turn;
 
 	bool _isLoaded = false;

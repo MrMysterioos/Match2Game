@@ -1,5 +1,6 @@
 {
-	"goal" : 50,
+	"id" : 1,
+	"goal" : 10,
 	"moves" : 5,
 	"width" : 5,
 	"height" : 5,

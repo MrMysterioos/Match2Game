@@ -1,8 +1,6 @@
 #include "GameScene.h"
 #include "MapScene.h"
-#include "json/document.h"
-
-using namespace rapidjson;
+#include "DataManager.h"
 
 void GameScene::AcceptMessage(std::string message, std::string data)
 {
@@ -17,6 +15,7 @@ void GameScene::AcceptMessage(std::string message, std::string data)
 	if (message == "Stability") {
 		if (_points >= _goal) {
 			_setState(GameSceneState::Win);
+			Send("Win", std::to_string(_lvlId));
 		}
 		else if (_moves <= 0) {
 			_setState(GameSceneState::Lose);
@@ -46,7 +45,7 @@ bool GameScene::init(std::string src)
 		"CloseNormal.png",
 		"CloseSelected.png",
 		[](Ref* pSender) {
-		Director::getInstance()->replaceScene(MapScene::create());
+		Director::getInstance()->popScene();
 	});
 
 	float x = visibleSize.width - closeItem->getContentSize().width / 2;
@@ -90,6 +89,13 @@ bool GameScene::init(std::string src)
 	return true;
 }
 
+void GameScene::_writeResult()
+{
+	auto levels = DataManager::GetInstance()->GetLevelData("json/levels.json");
+	levels[_lvlId].isFinish = true;
+	DataManager::GetInstance()->SaveLevelData(levels, "json/levels.json");
+}
+
 void GameScene::_setState(GameSceneState newState)
 {
 	_state = newState;
@@ -109,34 +115,17 @@ void GameScene::_setState(GameSceneState newState)
 
 void GameScene::_loadLvl(std::string src)
 {
-	std::string jsonData = FileUtils::getInstance()->getStringFromFile(src);
+	BuildLevelData data = DataManager::GetInstance()->GetBuildLevelData(src);
 
-	Document document;
-	document.Parse(jsonData.c_str());
+	int height = data.height;
+	int width = data.width;
 
-	if (document.IsObject()) {
-		log("it's ok");
-	}
-	else {
-		log("it's not ok");
-	}
-
-	int height = document["height"].GetInt();
-	int width = document["width"].GetInt();
-
-	auto arr = document["map"].GetArray();
-
-	std::vector<std::vector<int>> map(width, std::vector<int>(height, 1));
-
-	for (int ix = 0; ix < width; ix++) {
-		for (int iy = 0; iy < height; iy++) {
-			map[ix][iy] = arr[ix].GetArray()[iy].GetInt();
-		}
-	}
+	std::vector<std::vector<int>> map = data.matrix;
 
 	_gameField->SetMap(width, height, map);
 
-	_goal = document["goal"].GetInt();
-	_moves = document["moves"].GetInt();
+	_lvlId = data.lvlId;
+	_goal = data.goal;
+	_moves = data.moves;
 
 }

@@ -1,39 +1,61 @@
 #include "MapScene.h"
-#include "json/document.h"
 #include "LevelPreview.h"
+#include "DataManager.h"
+#include "GameScene.h"
 
-using namespace rapidjson;
+void MapScene::AcceptMessage(std::string message, std::string data)
+{
+	if (message == "Win") {
+		int index = std::atoi(data.c_str());
+		_levels[index].isFinish = true;
+		_updateLevels();
+	}
+}
 
 bool MapScene::init()
 {
 	if (!Scene::init()) {
 		return false;
 	}
+
+	auto visibleSize = Director::getInstance()->getVisibleSize();
+	Vec2 center(visibleSize.width / 2, visibleSize.height / 2);
+
+	_levelsOrigin = Node::create();
+	this->addChild(_levelsOrigin);
 	
 	_loadLevels();
 	_displayLevels();
+
+	auto closeItem = MenuItemImage::create(
+		"CloseNormal.png",
+		"CloseSelected.png",
+		[&](Ref* pSender) {
+		_saveLevels();
+		Director::getInstance()->end();
+	});
+
+	float x = visibleSize.width - closeItem->getContentSize().width / 2;
+	float y = closeItem->getContentSize().height / 2;
+	closeItem->setPosition(Vec2(x, y));
+
+	// create menu, it's an autorelease object
+	auto menu = Menu::create(closeItem, NULL);
+	menu->setPosition(Vec2::ZERO);
+	this->addChild(menu, 1);
 
 	return true;
 }
 
 void MapScene::_loadLevels()
 {
-	std::string jsonData = FileUtils::getInstance()->getStringFromFile("json/levels.json");
+	_levels = DataManager::GetInstance()->GetLevelData(_levelsSrc);
+	
+}
 
-	Document document;
-	document.Parse(jsonData.c_str());
-
-	if (document.IsArray()) {
-		log("ok");
-		auto arr = document.GetArray();
-		for (auto& el : arr) {
-			_levels.push_back(LevelData(el["num"].GetInt(), el["src"].GetString(), el["fin"].GetBool()));
-		}
-	}
-	else {
-		log("not ok");
-	}
-
+void MapScene::_saveLevels()
+{
+	DataManager::GetInstance()->SaveLevelData(_levels, _levelsSrc);
 }
 
 void MapScene::_displayLevels()
@@ -53,6 +75,18 @@ void MapScene::_displayLevels()
 		
 		LevelPreview* preview = LevelPreview::create(_levels[i]);
 		preview->setPosition(center + offset + Vec2((i % colums) * spacingX, -(i / colums) * spacingY));
-		this->addChild(preview);
+		_levelsOrigin->addChild(preview);
+
+		preview->SetCallback([=](Ref* pSender) {
+			auto gs = GameScene::create(_levels[i].source);
+			gs->Subscribe(this);
+			Director::getInstance()->pushScene(gs);
+		});
 	}
+}
+
+void MapScene::_updateLevels()
+{
+	_levelsOrigin->removeAllChildren();
+	_displayLevels();
 }

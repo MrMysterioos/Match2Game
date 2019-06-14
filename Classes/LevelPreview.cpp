@@ -1,5 +1,4 @@
 #include "LevelPreview.h"
-#include "GameScene.h"
 
 bool LevelPreview::init(LevelData data)
 {
@@ -11,15 +10,15 @@ bool LevelPreview::init(LevelData data)
 	return true;
 }
 
+void LevelPreview::SetCallback(const ccMenuCallback & callback)
+{
+	_button->setCallback(callback);
+}
+
 void LevelPreview::_SetLevelData(LevelData data)
 {
 	this->removeAllChildren();
-	
-	_button = MenuItemImage::create("textures/ui_assets/button_9slice.png", "textures/ui_assets/button_9slice01.png", [=](Ref* pSender) {
-		log("click");
-		GameScene* gameScene = GameScene::create(data.source);
-		Director::getInstance()->replaceScene(gameScene);
-	});
+	_button = MenuItemImage::create("textures/ui_assets/button_9slice.png", "textures/ui_assets/button_9slice01.png");
 	_button->setAnchorPoint(Vec2(0.5f, 0.5f));
 	_button->setZOrder(0);
 

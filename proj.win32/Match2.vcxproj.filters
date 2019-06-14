@@ -28,6 +28,9 @@
     <Filter Include="src\Structs">
       <UniqueIdentifier>{eb39197e-b2b2-44bb-984b-2d620a237b43}</UniqueIdentifier>
     </Filter>
+    <Filter Include="src\Global">
+      <UniqueIdentifier>{bdb0dc43-16d0-4c8c-939e-42fab0ce5f4c}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="main.cpp">
@@ -62,6 +65,9 @@
     </ClCompile>
     <ClCompile Include="..\Classes\LevelPreview.cpp">
       <Filter>src\Nodes</Filter>
+    </ClCompile>
+    <ClCompile Include="..\Classes\DataManager.cpp">
+      <Filter>src\Global</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -105,6 +111,12 @@
       <Filter>src\Nodes</Filter>
     </ClInclude>
     <ClInclude Include="..\Classes\LevelData.h">
+      <Filter>src\Structs</Filter>
+    </ClInclude>
+    <ClInclude Include="..\Classes\DataManager.h">
+      <Filter>src\Global</Filter>
+    </ClInclude>
+    <ClInclude Include="..\Classes\BuildLevelData.h">
       <Filter>src\Structs</Filter>
     </ClInclude>
   </ItemGroup>

@@ -3,12 +3,13 @@
 #include "cocos2d.h"
 #include "GameField.h"
 #include "MessageListener.h"
+#include "MessageSender.h"
 #include "MovesLeftLabel.h"
 #include "GoalLabel.h"
 
 USING_NS_CC;
 
-class GameScene : public Scene, public MessageListener {
+class GameScene : public Scene, public MessageListener, public MessageSender {
 public:
 
 	enum GameSceneState { Play, Win, Lose };
@@ -35,6 +36,8 @@ public:
 
 private:
 
+	void _writeResult();
+
 	void _setState(GameSceneState newState);
 	void _loadLvl(std::string src);
 
@@ -50,6 +53,8 @@ private:
 	int _moves = 25;
 	int _goal = 100;
 	int _points = 0;
+
+	int _lvlId;
 
 	// temp
 	void _ShowCoordinatesSystem(int step);

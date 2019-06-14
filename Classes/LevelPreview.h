@@ -10,7 +10,7 @@ public:
 
 	bool init(LevelData data);
 
-	void _SetLevelData(LevelData data);
+	void SetCallback(const ccMenuCallback &callback);
 
 	static LevelPreview* create(LevelData data)
 	{
@@ -30,7 +30,9 @@ public:
 
 private:
 
-	MenuItem * _button;
+	void _SetLevelData(LevelData data);
+
+	MenuItemImage * _button;
 	Sprite * _mainSprite;
 	Label * _label;
 	Sprite * _checkSprite;
