@@ -16,28 +16,30 @@ void GameField::SetMap(int width, int height, std::vector<std::vector<int>> matr
 				_matrix[ix][iy] = Item::Wall;
 			}
 			else {
-				int n = random() % 7;
-				if (n == 0) {
-					_matrix[ix][iy] = Item::Bread;
-				}
-				else if (n == 1) {
-					_matrix[ix][iy] = Item::Cocos;
-				}
-				else if (n == 2) {
-					_matrix[ix][iy] = Item::Milk;
-				}
-				else if (n == 3) {
-					_matrix[ix][iy] = Item::Orange;
-				}
-				else if (n == 4) {
-					_matrix[ix][iy] = Item::Tomato;
-				}
-				else if (n == 5) {
-					_matrix[ix][iy] = Item::Broccoli;
-				}
-				else if (n == 6) {
-					_matrix[ix][iy] = Item::Cristal;
-				}
+				do {
+					int n = random() % 7;
+					if (n == 0) {
+						_matrix[ix][iy] = Item::Bread;
+					}
+					else if (n == 1) {
+						_matrix[ix][iy] = Item::Cocos;
+					}
+					else if (n == 2) {
+						_matrix[ix][iy] = Item::Milk;
+					}
+					else if (n == 3) {
+						_matrix[ix][iy] = Item::Orange;
+					}
+					else if (n == 4) {
+						_matrix[ix][iy] = Item::Tomato;
+					}
+					else if (n == 5) {
+						_matrix[ix][iy] = Item::Broccoli;
+					}
+					else if (n == 6) {
+						_matrix[ix][iy] = Item::Cristal;
+					}
+				} while ((ix > 0 && _matrix[ix][iy] == _matrix[ix - 1][iy]) || (iy != 0 && _matrix[ix][iy] == _matrix[ix][iy - 1]));
 			}
 		}
 	}
@@ -59,7 +61,7 @@ void GameField::EnableInput()
 		log("mouse_down (%i : %i)", (int)co.x, (int)co.y);
 
 		if (mouseEvent->getMouseButton() == EventMouse::MouseButton::BUTTON_LEFT) {
-			if (co.x > 0 && co.x < _width && co.y > 0 && co.y < _height) {
+			if (co.x >= 0 && co.x < _width && co.y >= 0 && co.y < _height) {
 				_pos1 = co;
 			}
 		}
@@ -74,13 +76,18 @@ void GameField::EnableInput()
 
 		if (mouseEvent->getMouseButton() == EventMouse::MouseButton::BUTTON_LEFT) {
 
-			if (co.x > 0 && co.x < _width && co.y > 0 && co.y < _height) {
+			if (co.x >= 0 && co.x < _width && co.y >= 0 && co.y < _height) {
 				_pos2 = co;
 			}
 
-			if (_gameState == GameState::Turn && _pos1 != Vec2(-1.f, -1.f) && _pos2 != Vec2(-1.f, -1.f)) {
+			if (_gameState == GameState::Turn &&
+				_pos1 != Vec2(-1.f, -1.f) && _pos2 != Vec2(-1.f, -1.f) &&
+				(std::abs(_pos1.x - _pos2.x) == 1 && _pos1.y == _pos2.y) ^ (std::abs(_pos1.y - _pos2.y) == 1 && _pos1.x == _pos2.x) &&
+				_matrix[_pos1.x][_pos1.y] != Item::Wall && _matrix[_pos2.x][_pos2.y] != Item::Wall) {
 				_Swap(_pos1, _pos2);
-				_gameState = GameState::Swaping;
+				_lastPos1 = _pos1;
+				_lastPos2 = _pos2;
+				_gameState = GameState::Swapping;
 				_timeBeforeUpdate = 1.f / _gameSpeed;
 				Send("Swap", "");
 			}
@@ -114,7 +121,7 @@ bool GameField::init() {
 
 void GameField::update(float dt)
 {
-	float timeReserve = 0.05f;
+	float timeReserve = -0.01f;
 	if (_timeBeforeUpdate + timeReserve > 0.f) {
 		_timeBeforeUpdate -= dt;
 		if (_timeBeforeUpdate + timeReserve <= 0) {
@@ -217,6 +224,40 @@ bool GameField::_UpdateWaterfall()
 					_Swap(Vec2(ix, iy + 1), Vec2(ix, iy));
 					res = true;
 				}
+				else {
+					bool topLeft = false;
+					bool topRight = false;
+					if (ix < _width - 1) {
+						if (_matrix[ix + 1][iy + 1] != Item::Hole && _matrix[ix + 1][iy + 1] != Item::Wall && _matrix[ix + 1][iy] != Item::Hole) {
+							topRight = true;
+						}
+					}
+					if (ix > 0) {
+						if (_matrix[ix - 1][iy + 1] != Item::Hole && _matrix[ix - 1][iy + 1] != Item::Wall && _matrix[ix - 1][iy] != Item::Hole) {
+							topLeft = true;
+						}
+					}
+
+					if (topLeft && topRight) {
+						int rand = random(0, 1);
+						if (rand == 1) {
+							_Swap(Vec2(ix + 1, iy + 1), Vec2(ix, iy));
+						}
+						else {
+							_Swap(Vec2(ix - 1, iy + 1), Vec2(ix, iy));
+						}
+						res = true;
+					}
+					else if (topLeft || topRight) {
+						if (topRight) {
+							_Swap(Vec2(ix + 1, iy + 1), Vec2(ix, iy));
+						}
+						else {
+							_Swap(Vec2(ix - 1, iy + 1), Vec2(ix, iy));
+						}
+						res = true;
+					}
+				}
 			}
 		}
 	}
@@ -236,6 +277,8 @@ void GameField::_AddNewItems()
 int GameField::_CheckMatch() {
 	int points = 0;
 
+	std::vector<Vec2> forDestroy;
+
 	for (int iy = 0; iy < _height; iy++) {
 		int matchCount = 1;
 		Item lastItem = Item::Hole;
@@ -246,7 +289,7 @@ int GameField::_CheckMatch() {
 			else {
 				if (matchCount >= 2) {
 					for (int i = 0; i < matchCount; ++i) {
-						_Destroy(Vec2(ix - (i + 1), iy));
+						forDestroy.push_back(Vec2(ix - (i + 1), iy));
 						points++;
 					}
 				}
@@ -282,10 +325,14 @@ int GameField::_CheckMatch() {
 		}
 		if (matchCount >= 2) {
 			for (int i = 0; i < matchCount; ++i) {
-				_Destroy(Vec2(ix, _height - (i + 1)));
+				forDestroy.push_back(Vec2(ix, _height - (i + 1)));
 				points++;
 			}
 		}
+	}
+
+	for (auto vec : forDestroy) {
+		_Destroy(vec);
 	}
 
 	Send("Match", std::to_string(points));
@@ -342,17 +389,22 @@ Vec2 GameField::_GetPointedCellCoordinates(Vec2 mouseCoord)
 
 void GameField::_updateState()
 {
-	if (_gameState == GameState::Swaping) {
+	if (_gameState == GameState::Swapping) {
 		if (_CheckMatch()) {
 			_AddNewItems();
 			_gameState = GameState::Match;
 			_timeBeforeUpdate = 1.f / _gameSpeed;
 		}
 		else {
-			Send("Stability", "");
-			_gameState = GameState::Turn;
+			_Swap(_lastPos1, _lastPos2);
+			_gameState = GameState::Returning;
+			_timeBeforeUpdate = 1.f / _gameSpeed;
 		}
 		
+	}
+	else if (_gameState == GameState::Returning) {
+		Send("Stability", "");
+		_gameState = GameField::Turn;
 	}
 	else if (_gameState == GameState::Match) {
 		if (_UpdateWaterfall()) {

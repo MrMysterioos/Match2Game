@@ -9,7 +9,7 @@ USING_NS_CC;
 class GameField : public Node, public MessageSender {
 public:
 
-	enum GameState { Turn, Match, Waterfall, Swaping };
+	enum GameState { Turn, Match, Waterfall, Swapping, Returning };
 
 	void SetMap(int width, int height, std::vector<std::vector<int>> matrix);
 	void CreateRandomMap(int width, int height);
@@ -52,7 +52,7 @@ private:
 
 	bool _isLoaded = false;
 
-	float _gameSpeed = 2;
+	float _gameSpeed = 4;
 
 	float _timeBeforeUpdate = 0.f;
 
@@ -66,6 +66,11 @@ private:
 	std::vector<std::vector<Item>> _matrix;
 
 	std::map<Vec2, Sprite*> _sprites;
+
+	// last swap
+
+	Vec2 _lastPos1 = Vec2(-1.f, -1.f);
+	Vec2 _lastPos2 = Vec2(-1.f, -1.f);
 
 	// control
 
