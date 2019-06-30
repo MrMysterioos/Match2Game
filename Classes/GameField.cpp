@@ -53,33 +53,60 @@ void GameField::SetMap(int width, int height, std::vector<std::vector<int>> matr
 
 void GameField::EnableInput()
 {
-	_mouseDownListener = EventListenerMouse::create();
-	_mouseDownListener->onMouseDown = [&](Event* event) {
+	_mouseListener = EventListenerMouse::create();
+	// Mouse down handler
+	_mouseListener->onMouseDown = [&](Event* event) {
 		EventMouse* mouseEvent = (EventMouse*)event;
+
+		_drag = true;
 
 		Vec2 co = _GetPointedCellCoordinates(mouseEvent->getLocation());
 		log("mouse_down (%i : %i)", (int)co.x, (int)co.y);
 
 		if (mouseEvent->getMouseButton() == EventMouse::MouseButton::BUTTON_LEFT) {
 			if (co.x >= 0 && co.x < _width && co.y >= 0 && co.y < _height) {
+
+				if (_gameState == GameState::Turn)
+					_SelectSprite(co);
+
 				_pos1 = co;
 			}
 		}
 
 	};
 
-	_mouseUpListener = EventListenerMouse::create();
-	_mouseUpListener->onMouseUp = [&](Event* event) {
+	// Mouse up handler
+	_mouseListener->onMouseUp = [&](Event* event) {
 		EventMouse* mouseEvent = (EventMouse*)event;
+
+		_drag = false;
+
 		Vec2 co = _GetPointedCellCoordinates(mouseEvent->getLocation());
 		log("mouse_up (%i : %i)", (int)co.x, (int)co.y);
 
-		if (mouseEvent->getMouseButton() == EventMouse::MouseButton::BUTTON_LEFT) {
+		if (_gameState == GameState::Turn)
+			_UnselectSprite();
 
-			if (co.x >= 0 && co.x < _width && co.y >= 0 && co.y < _height) {
-				_pos2 = co;
-			}
+		_pos1 = _pos2 = Vec2(-1.f, -1.f);
 
+	};
+
+	// Mouse move handler
+	_mouseListener->onMouseMove = [&](Event* event) {
+		EventMouse* mouseEvent = (EventMouse*)event;
+
+		if (!_drag) return;
+
+		Vec2 co = _GetPointedCellCoordinates(mouseEvent->getLocation());
+
+
+		if (co.x >= 0 && co.x < _width && co.y >= 0 && co.y < _height) {
+			_pos2 = co;
+		}
+
+		if (_pos2 != _pos1) {
+			log("mouse_move (%i : %i)", (int)co.x, (int)co.y);
+			_drag = false;
 			if (_gameState == GameState::Turn &&
 				_pos1 != Vec2(-1.f, -1.f) && _pos2 != Vec2(-1.f, -1.f) &&
 				(std::abs(_pos1.x - _pos2.x) == 1 && _pos1.y == _pos2.y) ^ (std::abs(_pos1.y - _pos2.y) == 1 && _pos1.x == _pos2.x) &&
@@ -87,24 +114,20 @@ void GameField::EnableInput()
 				_Swap(_pos1, _pos2);
 				_lastPos1 = _pos1;
 				_lastPos2 = _pos2;
+				_UnselectSprite();
 				_gameState = GameState::Swapping;
 				_timeBeforeUpdate = 1.f / _gameSpeed;
-				Send("Swap", "");
 			}
-
-			_pos1 = _pos2 = Vec2(-1.f, -1.f);
 		}
 
 	};
 
-	_eventDispatcher->addEventListenerWithFixedPriority(_mouseDownListener, 1);
-	_eventDispatcher->addEventListenerWithFixedPriority(_mouseUpListener, 1);
+	_eventDispatcher->addEventListenerWithFixedPriority(_mouseListener, 1);
 }
 
 void GameField::DisableInput()
 {
-	_eventDispatcher->removeEventListener(_mouseDownListener);
-	_eventDispatcher->removeEventListener(_mouseUpListener);
+	_eventDispatcher->removeEventListener(_mouseListener);
 }
 
 bool GameField::init() {
@@ -121,6 +144,7 @@ bool GameField::init() {
 
 void GameField::update(float dt)
 {
+	// Update timer
 	float timeReserve = -0.01f;
 	if (_timeBeforeUpdate + timeReserve > 0.f) {
 		_timeBeforeUpdate -= dt;
@@ -135,12 +159,12 @@ void GameField::_Swap(Vec2 first, Vec2 second)
 	std::swap(_matrix[round(first.x)][round(first.y)], _matrix[round(second.x)][round(second.y)]);
 
 	if (_sprites[first]) {
-		Action* move1 = MoveTo::create(1.f / _gameSpeed, (Vec2(second.x, second.y) * _spacing) + _offset);
+		Action* move1 = MoveTo::create(1.f / _gameSpeed, (Vec2(second.x, second.y) * _spacing) + _offset + Vec2(_spacing / 2, _spacing / 2));
 		_sprites[first]->stopAllActions();
 		_sprites[first]->runAction(move1);
 	}
 	if (_sprites[second]) {
-		Action* move2 = MoveTo::create(1.f / _gameSpeed, (Vec2(first.x, first.y) * _spacing) + _offset);
+		Action* move2 = MoveTo::create(1.f / _gameSpeed, (Vec2(first.x, first.y) * _spacing) + _offset + Vec2(_spacing / 2, _spacing / 2));
 		_sprites[second]->stopAllActions();
 		_sprites[second]->runAction(move2);
 	}
@@ -149,10 +173,10 @@ void GameField::_Swap(Vec2 first, Vec2 second)
 	
 }
 
-void GameField::_Destroy(Vec2 item)
+bool GameField::_Destroy(Vec2 item)
 {
 	if (!_sprites[item]) {
-		return;
+		return false;
 	}
 
 	_matrix[round(item.x)][round(item.y)] = Item::Hole;
@@ -167,6 +191,7 @@ void GameField::_Destroy(Vec2 item)
 	_sprites[item]->runAction(Sequence::create(fadeOut, callback, nullptr));
 	_sprites.erase(item);
 
+	return true;
 }
 
 void GameField::_CreateItem(Vec2 coord, Item type)
@@ -174,16 +199,26 @@ void GameField::_CreateItem(Vec2 coord, Item type)
 	_matrix[round(coord.x)][round(coord.y)] = type;
 	Sprite* sprite = ItemSpriteFactory::CreateItemSprite(type);
 
-	sprite->setPosition(Vec2(coord.x * _spacing, (coord.y + 1.f) * _spacing) + _offset);
-	sprite->setAnchorPoint(Vec2::ZERO);
+	sprite->setPosition(Vec2(coord.x * _spacing, coord.y * _spacing)
+		+ _offset
+		+ Vec2(_spacing / 2, _spacing / 2)
+		+ Vec2(0.f, _spacing));
+	sprite->setAnchorPoint(Vec2(0.5f, 0.5f));
 
 	auto fadeIn = FadeIn::create(1.f / _gameSpeed);
-	auto moveTo = MoveTo::create(1.f / _gameSpeed, Vec2(coord.x * _spacing, coord.y * _spacing) + _offset);
+	auto moveTo = MoveTo::create(1.f / _gameSpeed, Vec2(coord.x * _spacing, coord.y * _spacing) + _offset + Vec2(_spacing / 2, _spacing / 2));
 	sprite->setOpacity(0);
 	sprite->runAction(Spawn::create(fadeIn, moveTo, nullptr));
 
 	this->addChild(sprite);
-	_sprites[coord] = sprite;
+
+	if (_sprites.find(coord) == _sprites.end()) {
+		_sprites.insert(std::pair<Vec2, Sprite*>(Vec2(coord.x, coord.y), sprite));
+	}
+	else {
+		_sprites[coord] = sprite;
+	}
+	
 }
 
 void GameField::_CreateRandomItem(Vec2 coord)
@@ -290,49 +325,36 @@ int GameField::_CheckMatch() {
 				if (matchCount >= 2) {
 					for (int i = 0; i < matchCount; ++i) {
 						forDestroy.push_back(Vec2(ix - (i + 1), iy));
-						points++;
 					}
 				}
 				lastItem = _matrix[ix][iy];
 				matchCount = 1;
 			}
 		}
-		if (matchCount >= 2) {
-			for (int i = 0; i < matchCount; ++i) {
-				_Destroy(Vec2(_width - (i + 1), iy));
-				points++;
-			}
-		}
 	}
 
-	for (int ix = 0; ix < _height; ix++) {
+	for (int ix = 0; ix < _width; ix++) {
 		int matchCount = 1;
 		Item lastItem = Item::Hole;
-		for (int iy = 0; iy < _width; iy++) {
+		for (int iy = 0; iy < _height; iy++) {
 			if (lastItem != Item::Wall && lastItem != Item::Hole && lastItem == _matrix[ix][iy]) {
 				++matchCount;
 			}
 			else {
 				if (matchCount >= 2) {
 					for (int i = 0; i < matchCount; ++i) {
-						_Destroy(Vec2(ix, iy - (i + 1)));
-						points++;
+						forDestroy.push_back(Vec2(ix, iy - (i + 1)));
 					}
 				}
 				lastItem = _matrix[ix][iy];
 				matchCount = 1;
 			}
 		}
-		if (matchCount >= 2) {
-			for (int i = 0; i < matchCount; ++i) {
-				forDestroy.push_back(Vec2(ix, _height - (i + 1)));
-				points++;
-			}
-		}
 	}
 
 	for (auto vec : forDestroy) {
-		_Destroy(vec);
+		if (_Destroy(vec))
+			points++;
 	}
 
 	Send("Match", std::to_string(points));
@@ -350,7 +372,7 @@ void GameField::_CreateGrid()
 		for (int iy = 0; iy < _height; iy++) {
 			Sprite* sprite = Sprite::create("textures/characters/grid_0001.png");
 			sprite->setPosition(Vec2(ix * _spacing, iy * _spacing) + _offset);
-			sprite->setAnchorPoint(Vec2(0.f, 0.f));
+			sprite->setAnchorPoint(Vec2::ZERO);
 			this->addChild(sprite);
 		}
 	}
@@ -366,11 +388,15 @@ void GameField::_CreateItems() {
 	for (int ix = 0; ix < _width; ix++) {
 		for (int iy = 0; iy < _height; iy++) {
 
+			_CreateItem(Vec2(ix, iy), _matrix[ix][iy]);
+
+			/*
 			Sprite* sprite = ItemSpriteFactory::CreateItemSprite(_matrix[ix][iy]);
-			sprite->setPosition(Vec2(ix * _spacing, iy * _spacing) + _offset);
-			sprite->setAnchorPoint(Vec2::ZERO);
+			sprite->setPosition(Vec2(ix * _spacing, iy * _spacing) + _offset + Vec2(_spacing / 2, _spacing / 2));
+			sprite->setAnchorPoint(Vec2(0.5f, 0.5f));
 			this->addChild(sprite);
 			_sprites.insert(std::pair<Vec2, Sprite*>(Vec2(ix, iy), sprite));
+			*/
 
 		}
 	}
@@ -392,6 +418,7 @@ void GameField::_updateState()
 	if (_gameState == GameState::Swapping) {
 		if (_CheckMatch()) {
 			_AddNewItems();
+			Send("Swap", "");
 			_gameState = GameState::Match;
 			_timeBeforeUpdate = 1.f / _gameSpeed;
 		}
@@ -436,6 +463,20 @@ void GameField::_updateState()
 			Send("Stability", "");
 			_gameState = GameState::Turn;
 		}
+	}
+}
+
+void GameField::_SelectSprite(Vec2 coords)
+{
+	_selectedSprite = _sprites[coords];
+	_selectedSprite->runAction(ScaleTo::create(0.5f / _gameSpeed, 1.25f));
+}
+
+void GameField::_UnselectSprite()
+{
+	if (_selectedSprite) {
+		_selectedSprite->runAction(ScaleTo::create(0.5f / _gameSpeed, 1.f));
+		_selectedSprite = nullptr;
 	}
 }
 

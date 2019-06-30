@@ -40,6 +40,15 @@ bool GameScene::init(std::string src)
 	_gameField->Subscribe(this);
 
 	_loadLvl(src);
+	
+	Size GFSize = _gameField->GetSize();
+	Vec2 desireScale = Vec2((float)visibleSize.width / GFSize.width, (float)visibleSize.height / GFSize.height);
+	if (desireScale.x < _gameField->getScale()) {
+		_gameField->setScale((float)visibleSize.width / GFSize.width);
+	}
+	if (desireScale.y < _gameField->getScale()) {
+		_gameField->setScale((float)visibleSize.height / GFSize.height);
+	}
 
 	auto closeItem = MenuItemImage::create(
 		"CloseNormal.png",

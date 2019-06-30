@@ -17,6 +17,11 @@ public:
 	void EnableInput();
 	void DisableInput();
 
+	int GetHeight() { return _height; };
+	int GetWidth() { return _width; };
+
+	Size GetSize() { return Size(_width * _spacing, _height * _spacing); };
+
 	CREATE_FUNC(GameField);
 
 private:
@@ -26,7 +31,7 @@ private:
 	virtual void update(float dt) override;
 
 	void _Swap(Vec2 first, Vec2 second);
-	void _Destroy(Vec2 coord);
+	bool _Destroy(Vec2 coord);
 	void _CreateItem(Vec2 coord, Item type);
 	void _CreateRandomItem(Vec2 coord);
 
@@ -43,10 +48,12 @@ private:
 
 	void _updateState();
 
+	void _SelectSprite(Vec2 coords);
+	void _UnselectSprite();
+
 	~GameField();
 
-	EventListenerMouse* _mouseDownListener;
-	EventListenerMouse* _mouseUpListener;
+	EventListenerMouse* _mouseListener;
 
 	GameState _gameState = GameState::Turn;
 
@@ -67,12 +74,16 @@ private:
 
 	std::map<Vec2, Sprite*> _sprites;
 
+	Sprite* _selectedSprite = nullptr;
+
 	// last swap
 
 	Vec2 _lastPos1 = Vec2(-1.f, -1.f);
 	Vec2 _lastPos2 = Vec2(-1.f, -1.f);
 
 	// control
+
+	bool _drag = false;
 
 	Vec2 _pos1 = Vec2(-1.f, -1.f);
 	Vec2 _pos2 = Vec2(-1.f, -1.f);

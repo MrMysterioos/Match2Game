@@ -68,7 +68,7 @@ BuildLevelData DataManager::GetBuildLevelData(std::string path)
 
 	for (int ix = 0; ix < bld.width; ix++) {
 		for (int iy = 0; iy < bld.height; iy++) {
-			bld.matrix[ix][iy] = arr[ix].GetArray()[iy].GetInt();
+			bld.matrix[ix][iy] = arr[bld.height - 1 - iy].GetArray()[ix].GetInt();
 		}
 	}
 
