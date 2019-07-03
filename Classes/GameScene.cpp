@@ -32,6 +32,10 @@ bool GameScene::init(std::string src)
 	auto visibleSize = Director::getInstance()->getVisibleSize();
 	Vec2 center(visibleSize.width / 2, visibleSize.height / 2);
 
+	auto back = Sprite::create("textures/back/back_1.png");
+	back->setAnchorPoint(Vec2::ZERO);
+	this->addChild(back);
+
 	_gameField = GameField::create();
 	_gameField->setScale(0.4f);
 	_gameField->setPosition(center);
@@ -51,8 +55,8 @@ bool GameScene::init(std::string src)
 	}
 
 	auto closeItem = MenuItemImage::create(
-		"CloseNormal.png",
-		"CloseSelected.png",
+		"textures/ui_assets/button_home01.png",
+		"textures/ui_assets/button_home02.png",
 		[](Ref* pSender) {
 		Director::getInstance()->popScene();
 	});
@@ -67,32 +71,46 @@ bool GameScene::init(std::string src)
 	this->addChild(menu, 1);
 
 	_mll = MovesLeftLabel::create();
-	_mll->setAnchorPoint(Vec2(1.f, 1.f));
-	_mll->setPosition(Vec2(visibleSize.width, visibleSize.height));
-	_mll->setSystemFontSize(21);
+	_mll->setPosition(Vec2(0.f, visibleSize.height - 25));
 	_mll->SetValue(_moves);
 	this->addChild(_mll);
 
 	_gl = GoalLabel::create();
-	_gl->setAnchorPoint(Vec2(1.f, 1.f));
-	_gl->setPosition(Vec2(visibleSize.width, visibleSize.height - 50));
-	_gl->setSystemFontSize(21);
+	_gl->setPosition(Vec2(0.f, visibleSize.height - 100));
 	_gl->SetCurrentValue(_points);
 	_gl->SetRequireValue(_goal);
 	this->addChild(_gl);
 
-	_winLabel = Label::create("You Win", "SnowDream.TTF", 32);
+	_winLabel = Node::create();
 	_winLabel->setAnchorPoint(Vec2(0.5f, 0.5f));
 	_winLabel->setPosition(center);
 	_winLabel->setZOrder(5);
 	_winLabel->setVisible(false);
+
+	auto winText = Label::create("You Win", "fonts/HVD_Comic_Serif_Pro.otf", 32);
+	winText->setAnchorPoint(Vec2(0.5f, 0.5f));
+	_winLabel->addChild(winText, 2);
+
+	auto winSprite = Sprite::create("textures/ui_assets/button_9slice01.png");
+	winSprite->setAnchorPoint(Vec2(0.5f, 0.5f));
+	_winLabel->addChild(winSprite, 1);
+
 	this->addChild(_winLabel);
 
-	_loseLabel = Label::create("You Lose", "SnowDream.TTF", 32);
+	_loseLabel = Node::create();
 	_loseLabel->setAnchorPoint(Vec2(0.5f, 0.5f));
 	_loseLabel->setPosition(center);
 	_loseLabel->setZOrder(5);
 	_loseLabel->setVisible(false);
+
+	auto loseText = Label::create("You Lose", "fonts/HVD_Comic_Serif_Pro.otf", 32);
+	loseText->setAnchorPoint(Vec2(0.5f, 0.5f));
+	_loseLabel->addChild(loseText, 2);
+
+	auto loseSprite = Sprite::create("textures/ui_assets/button_9slice01.png");
+	loseSprite->setAnchorPoint(Vec2(0.5f, 0.5f));
+	_loseLabel->addChild(loseSprite, 1);
+
 	this->addChild(_loseLabel);
 
 	return true;

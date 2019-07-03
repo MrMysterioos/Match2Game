@@ -50,13 +50,12 @@ private:
 	Node* _winLabel;
 	Node* _loseLabel;
 
+	Node* _exitDialog;
+
 	int _moves = 25;
 	int _goal = 100;
 	int _points = 0;
 
 	int _lvlId;
-
-	// temp
-	void _ShowCoordinatesSystem(int step);
 
 };

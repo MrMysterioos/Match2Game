@@ -14,9 +14,17 @@ void GoalLabel::SetRequireValue(int newValue)
 
 bool GoalLabel::init()
 {
-	if (!Label::init()) {
+	if (!Node::init()) {
 		return false;
 	}
+
+	_label = Label::create(_title, "fonts/HVD_Comic_Serif_Pro.otf", 32);
+	_label->setAnchorPoint(Vec2(0.f, 1.f));
+	this->addChild(_label, 1);
+
+	auto back = Sprite::create("textures/ui_assets/inGameCounter_bar.png");
+	back->setAnchorPoint(Vec2(0.f, 0.8f));
+	this->addChild(back, 0);
 
 	_UpdateLabel();
 
@@ -25,5 +33,5 @@ bool GoalLabel::init()
 
 void GoalLabel::_UpdateLabel()
 {
-	setString(_title + std::to_string(_current) + '/' + std::to_string(_require));
+	_label->setString(_title + std::to_string(_current) + '/' + std::to_string(_require));
 }

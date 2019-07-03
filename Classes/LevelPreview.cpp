@@ -26,21 +26,15 @@ void LevelPreview::_SetLevelData(LevelData data)
 	menu->setPosition(Vec2::ZERO);
 	this->addChild(menu);
 
-	/*
-	_mainSprite = Sprite::create("textures/ui_assets/iconLevel.png");
-	_mainSprite->setAnchorPoint(Vec2(0.5f, 0.5f));
-	_mainSprite->setZOrder(0);
-	this->addChild(_mainSprite);
-	*/
-
-	_label = Label::create(std::to_string(data.number), "SnowDream.TTF", 32);
+	_label = Label::create(std::to_string(data.number), "fonts/SnowDream.TTF", 32);
 	_label->setAnchorPoint(Vec2(0.5f, 0.5f));
 	_label->setZOrder(2);
 	this->addChild(_label);
 
 	if (data.isFinish) {
-		_checkSprite = Sprite::create("textures/ui_assets/check_mark.png");
+		_checkSprite = Sprite::create("textures/ui_assets/check_mark_small.png");
 		_checkSprite->setAnchorPoint(Vec2(0.5f, 0.5f));
+		_checkSprite->setPosition(Vec2(-50.f, 40.f));
 		_checkSprite->setZOrder(1);
 		this->addChild(_checkSprite);
 	}

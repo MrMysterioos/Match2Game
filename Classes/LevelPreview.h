@@ -33,7 +33,6 @@ private:
 	void _SetLevelData(LevelData data);
 
 	MenuItemImage * _button;
-	Sprite * _mainSprite;
 	Label * _label;
 	Sprite * _checkSprite;
 };

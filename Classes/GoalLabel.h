@@ -4,7 +4,7 @@
 
 USING_NS_CC;
 
-class GoalLabel : public Label {
+class GoalLabel : public Node {
 public:
 	void SetCurrentValue(int newValue);
 	void SetRequireValue(int newValue);
@@ -14,6 +14,8 @@ private:
 	bool init() override;
 
 	void _UpdateLabel();
+
+	Label* _label;
 
 	std::string _title = "Goal:";
 	int _require = 100;

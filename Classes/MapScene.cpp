@@ -21,6 +21,10 @@ bool MapScene::init()
 	auto visibleSize = Director::getInstance()->getVisibleSize();
 	Vec2 center(visibleSize.width / 2, visibleSize.height / 2);
 
+	auto back = Sprite::create("textures/back/back_1.png");
+	back->setAnchorPoint(Vec2::ZERO);
+	this->addChild(back);
+
 	_levelsOrigin = Node::create();
 	this->addChild(_levelsOrigin);
 	
@@ -28,8 +32,8 @@ bool MapScene::init()
 	_displayLevels();
 
 	auto closeItem = MenuItemImage::create(
-		"CloseNormal.png",
-		"CloseSelected.png",
+		"textures/ui_assets/button_close01.png",
+		"textures/ui_assets/button_close02.png",
 		[&](Ref* pSender) {
 		_saveLevels();
 		Director::getInstance()->end();
