@@ -180,6 +180,17 @@ bool GameField::_Destroy(Vec2 item)
 	}
 
 	_matrix[round(item.x)][round(item.y)] = Item::Hole;
+	
+	// Particle
+	ParticleSystem* destroyEffect = ParticleFlower::create();
+	destroyEffect->setPosition(_sprites[item]->getPosition());
+
+	destroyEffect->setDuration(0.05f);
+	destroyEffect->setLife(0.2f);
+	destroyEffect->setEmissionRate(1000.f);
+	destroyEffect->setAutoRemoveOnFinish(true);
+
+	this->addChild(destroyEffect, 100);
 
 	auto fadeOut = FadeOut::create(1.f / _gameSpeed);
 
@@ -317,8 +328,15 @@ int GameField::_CheckMatch() {
 	for (int iy = 0; iy < _height; iy++) {
 		int matchCount = 1;
 		Item lastItem = Item::Hole;
-		for (int ix = 0; ix < _width; ix++) {
-			if (lastItem != Item::Wall && lastItem != Item::Hole && lastItem == _matrix[ix][iy]) {
+		for (int ix = 0; ix <= _width; ix++) {
+			if (ix == _width) {
+				if (matchCount >= 2) {
+					for (int i = 0; i < matchCount; ++i) {
+						forDestroy.push_back(Vec2(ix - (i + 1), iy));
+					}
+				}
+			}
+			else if (lastItem != Item::Wall && lastItem != Item::Hole && lastItem == _matrix[ix][iy]) {
 				++matchCount;
 			}
 			else {
@@ -336,8 +354,15 @@ int GameField::_CheckMatch() {
 	for (int ix = 0; ix < _width; ix++) {
 		int matchCount = 1;
 		Item lastItem = Item::Hole;
-		for (int iy = 0; iy < _height; iy++) {
-			if (lastItem != Item::Wall && lastItem != Item::Hole && lastItem == _matrix[ix][iy]) {
+		for (int iy = 0; iy <= _height; iy++) {
+			if (iy == _height) {
+				if (matchCount >= 2) {
+					for (int i = 0; i < matchCount; ++i) {
+						forDestroy.push_back(Vec2(ix, iy - (i + 1)));
+					}
+				}
+			}
+			else if (lastItem != Item::Wall && lastItem != Item::Hole && lastItem == _matrix[ix][iy]) {
 				++matchCount;
 			}
 			else {
